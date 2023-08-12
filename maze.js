@@ -7,6 +7,7 @@ const height = 400;
 const cw = Math.floor(width / 10);
 let cells = [];
 let current;
+let stack = [];
 createGrid();
 
 
@@ -89,28 +90,35 @@ function Cell(i, j) {
 }
 
 function mazeGenerator() {
-    let before = current;
-    current = current.isNeighbours();
-    console.log(current);
-    if (before.place + 1 === current.place) {
-        before.walls[2] = false;
-        current.walls[0] = false;
-    } else if (before.place - 1 === current.place) {
-        current.walls[2] = false;
-        before.walls[0] = false;
-    } else if (before.place - 10 === current.place) {
-        current.walls[1] = false;
-        before.walls[3] = false;
-    } else if (before.place + 10 === current.place) {
-        current.walls[3] = false;
-        before.walls[1] = false;
+    if(stack.length < 100){
+        let before = current;
+        current = current.isNeighbours();
+        console.log(current);
+        if(current){
+            if (before.place + 1 === current.place) {
+                before.walls[2] = false;
+                current.walls[0] = false;
+            } else if (before.place - 1 === current.place) {
+                current.walls[2] = false;
+                before.walls[0] = false;
+            } else if (before.place - 10 === current.place) {
+                current.walls[1] = false;
+                before.walls[3] = false;
+            } else if (before.place + 10 === current.place) {
+                current.walls[3] = false;
+                before.walls[1] = false;
+            }
+            current.visited = true;
+            stack.push(current);
+        }else{
+            current = stack.pop();
+            console.log('else')
+        }
+        current.draw();
+        before.draw();
     }
-    current.visited = true;
-    current.draw();
-    before.draw();
 }
-
-for(let x = 0; x < 40; x++){
+for(x = 0; x < 100; x++){
     mazeGenerator()
 }
 
