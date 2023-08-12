@@ -8,31 +8,32 @@ const cw = Math.floor(width / 10);
 let cells = [];
 let current;
 createMaze();
-move();
 
 
 function createMaze() {
     for (let j = 0; j < 10; j++) {
         for (let i = 0; i < 10; i++) {
             cells.push(new Cell(i, j));
-            current = cells[0];
         }
     }
-    cells.forEach(element => element.draw());
-    cells.forEach(element => element.addNeighbors());
+    current = cells[0];
+    current.visited = true;
+    cells.forEach(element =>{
+        element.draw();
+        element.addNeighbors();
+    });
 }
 
 function Cell(i, j) {
     this.i = i;
     this.j = j;
-    this.place = j * 10 + i, 10;
+    this.place = j * width / cw + i, height / cw;
     this.walls = [true, true, true, true]; //Top,Right,Bottom,Left;
     this.visited = false;
     this.neighbours = [];
+    this.unvisitedNeighbours = [];
     let x = cw * j;
     let y = cw * i;
-
-
 
 
     this.draw = () => {
@@ -44,6 +45,11 @@ function Cell(i, j) {
         if (this.walls[3]) line(x, y + cw, x, y);
         ctx.stroke();
         ctx.closePath();
+
+        if (this.visited) {
+            ctx.fillStyle = 'rgba(255,0,255,0.5)';
+            if (this.visited) ctx.fillRect(x + 1, y + 1, cw - 1, cw - 1);
+        }
     }
 
     this.addNeighbors = () => {
@@ -69,17 +75,18 @@ function Cell(i, j) {
         }
     }
 
-    this.checkNeighbours = () => {
-        ctx.fillStyle = 'rgba(255,0,255,0.5)';
-        if (this.visited) ctx.fillRect(x + 1, y + 1, cw - 1, cw - 1);
-        let result = [];
-        console.log(this.neighbours);
-    }
-}
+    this.isNeighbours = () => {
+        this.unvisitedNeighbours = [];
+        if (this.neighbours[0] && !this.neighbours[0].visited) this.unvisitedNeighbours.push(this.neighbours[0]);
+        if (this.neighbours[1] && !this.neighbours[1].visited) this.unvisitedNeighbours.push(this.neighbours[1]);
+        if (this.neighbours[2] && !this.neighbours[2].visited) this.unvisitedNeighbours.push(this.neighbours[2]);
+        if (this.neighbours[3] && !this.neighbours[3].visited) this.unvisitedNeighbours.push(this.neighbours[3]);
 
-function move() {
-    current.visited = true;
-    current.checkNeighbours();
+        if (this.unvisitedNeighbours.length > 0) {
+            let r = Math.floor(Math.random() * this.unvisitedNeighbours.length);
+            return this.unvisitedNeighbours[r];
+        }
+    }
 }
 
 function line(x, y, xa, ya) {
@@ -89,3 +96,4 @@ function line(x, y, xa, ya) {
 
 // Objectives :
 // -- spot is the neighbours are visited or not.
+// -- refactor code !!!
