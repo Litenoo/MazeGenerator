@@ -7,10 +7,10 @@ const height = 400;
 const cw = Math.floor(width / 10);
 let cells = [];
 let current;
-createMaze();
+createGrid();
 
 
-function createMaze() {
+function createGrid() {
     for (let j = 0; j < 10; j++) {
         for (let i = 0; i < 10; i++) {
             cells.push(new Cell(i, j));
@@ -18,9 +18,8 @@ function createMaze() {
     }
     current = cells[0];
     current.visited = true;
-    cells.forEach(element =>{
-        element.draw();
-        element.addNeighbors();
+    cells.forEach(element => {
+        element.setup();
     });
 }
 
@@ -37,6 +36,11 @@ function Cell(i, j) {
 
 
     this.draw = () => {
+        if (this.visited) {
+            ctx.fillStyle = 'rgb(130,0,130)';
+            if (this.visited) ctx.fillRect(x, y, cw, cw);
+        }
+
         ctx.beginPath();
         ctx.strokeStyle = '#fff';
         if (this.walls[0]) line(x, y, x + cw, y);
@@ -45,14 +49,9 @@ function Cell(i, j) {
         if (this.walls[3]) line(x, y + cw, x, y);
         ctx.stroke();
         ctx.closePath();
-
-        if (this.visited) {
-            ctx.fillStyle = 'rgba(255,0,255,0.5)';
-            if (this.visited) ctx.fillRect(x + 1, y + 1, cw - 1, cw - 1);
-        }
     }
 
-    this.addNeighbors = () => {
+    this.setup = () => {
         if (this.i !== 0) {
             this.neighbours.push(cells[this.place - 1]);//Top
         } else {
@@ -85,8 +84,34 @@ function Cell(i, j) {
         if (this.unvisitedNeighbours.length > 0) {
             let r = Math.floor(Math.random() * this.unvisitedNeighbours.length);
             return this.unvisitedNeighbours[r];
-        }
+        } else return null;
     }
+}
+
+function mazeGenerator() {
+    let before = current;
+    current = current.isNeighbours();
+    console.log(current);
+    if (before.place + 1 === current.place) {
+        before.walls[2] = false;
+        current.walls[0] = false;
+    } else if (before.place - 1 === current.place) {
+        current.walls[2] = false;
+        before.walls[0] = false;
+    } else if (before.place - 10 === current.place) {
+        current.walls[1] = false;
+        before.walls[3] = false;
+    } else if (before.place + 10 === current.place) {
+        current.walls[3] = false;
+        before.walls[1] = false;
+    }
+    current.visited = true;
+    current.draw();
+    before.draw();
+}
+
+for(let x = 0; x < 40; x++){
+    mazeGenerator()
 }
 
 function line(x, y, xa, ya) {
