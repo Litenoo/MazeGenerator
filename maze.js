@@ -9,19 +9,18 @@ let cells = [];
 let current;
 let stack = [];
 createGrid();
+mazeGenerator();
 
 
 function createGrid() {
-    for (let j = 0; j < 10; j++) {
-        for (let i = 0; i < 10; i++) {
+    for (let j = 0; j < width/cw; j++) {
+        for (let i = 0; i < height/cw; i++) {
             cells.push(new Cell(i, j));
         }
     }
     current = cells[0];
     current.visited = true;
-    cells.forEach(element => {
-        element.setup();
-    });
+    cells.forEach(element => element.setup());
 }
 
 function Cell(i, j) {
@@ -32,6 +31,7 @@ function Cell(i, j) {
     this.visited = false;
     this.neighbours = [];
     this.unvisitedNeighbours = [];
+    this.player = false;
     let x = cw * j;
     let y = cw * i;
 
@@ -39,7 +39,15 @@ function Cell(i, j) {
     this.draw = () => {
         if (this.visited) {
             ctx.fillStyle = 'rgb(130,0,130)';
-            if (this.visited) ctx.fillRect(x, y, cw, cw);
+            ctx.fillRect(x, y, cw, cw);
+        }
+        if(this.finish === true){
+            ctx.fillStyle = 'rgb(10,150,50)';
+            ctx.fillRect(x,y,cw,cw);
+        }
+        if(this.player){
+            ctx.fillStyle = 'rgb(10,90,180)';
+            ctx.fillRect(x,y,cw,cw);
         }
 
         ctx.beginPath();
@@ -89,15 +97,24 @@ function Cell(i, j) {
     }
 }
 
+function isEnd(){
+    if(cells.every(element => element.visited)){
+        return false;
+    }else{
+        return true;
+    }
+}
+
 function mazeGenerator() {
-    if(stack.length < 100){
+    cells[0].player = true;
+    cells[99].finish = true;
+    while(isEnd()){
         let before = current;
         current = current.isNeighbours();
-        console.log(current);
         if(current){
             if (before.place + 1 === current.place) {
-                before.walls[2] = false;
                 current.walls[0] = false;
+                before.walls[2] = false;
             } else if (before.place - 1 === current.place) {
                 current.walls[2] = false;
                 before.walls[0] = false;
@@ -110,23 +127,15 @@ function mazeGenerator() {
             }
             current.visited = true;
             stack.push(current);
+            current.draw();
+            before.draw();
         }else{
             current = stack.pop();
-            console.log('else')
         }
-        current.draw();
-        before.draw();
     }
-}
-for(x = 0; x < 100; x++){
-    mazeGenerator()
 }
 
 function line(x, y, xa, ya) {
     ctx.moveTo(x, y);
     ctx.lineTo(xa, ya);
 }
-
-// Objectives :
-// -- spot is the neighbours are visited or not.
-// -- refactor code !!!
