@@ -10,15 +10,15 @@ document.addEventListener('keydown', (btn) => {
             if (element.player === true) playerCell = element;
         })
     }
-    if (btn.key == 'w') move(0,-1)
-    if (btn.key == 'd') move(1,+10)
-    if (btn.key == 's') move(2,+1)
-    if (btn.key == 'a') move(3,-10)
+    if (btn.key == 'w') move(0, -1)
+    if (btn.key == 'd') move(1, rowsCols)
+    if (btn.key == 's') move(2, 1)
+    if (btn.key == 'a') move(3, -rowsCols)
 
-    if (playerCell.place === 99) gameOver();
+    if (playerCell.place === rowsCols * rowsCols - 1) gameOver();
 })
 
-function move(wall,num){
+function move(wall, num) {
     if (playerCell.walls[wall] === false) {
         playerCell.player = false;
         playerCell.draw();
@@ -28,9 +28,13 @@ function move(wall,num){
     }
 }
 
+
+
+
 const width = 400;
 const height = 400;
-const cw = Math.floor(width / 10);
+const rowsCols = 20;
+const cw = Math.floor(width / rowsCols);
 let cells = [];
 let stack = [];
 let current;
@@ -40,8 +44,8 @@ mazeGenerator();
 
 
 function createGrid() {
-    for (let j = 0; j < width / cw; j++) {
-        for (let i = 0; i < height / cw; i++) {
+    for (let j = 0; j < rowsCols; j++) {
+        for (let i = 0; i < rowsCols; i++) {
             cells.push(new Cell(i, j));
         }
     }
@@ -53,7 +57,7 @@ function createGrid() {
 function Cell(i, j) {
     this.i = i;
     this.j = j;
-    this.place = j * width / cw + i, height / cw;
+    this.place = j * rowsCols + i, rowsCols;
     this.walls = [true, true, true, true]; //Top,Right,Bottom,Left;
     this.neighbours = [];
     this.unvisitedNeighbours = [];
@@ -65,7 +69,7 @@ function Cell(i, j) {
 
     this.draw = () => {
         if (this.visited) {
-            ctx.fillStyle = 'rgb(130,0,130)';
+            ctx.fillStyle = 'rgb(90,0,130)';
             ctx.fillRect(x, y, cw, cw);
         }
         if (this.finish === true) {
@@ -87,27 +91,26 @@ function Cell(i, j) {
         ctx.closePath();
     }
 
-    this.setup = () => {
+    this.setup = () => { //think
         if (this.i !== 0) {
             this.neighbours.push(cells[this.place - 1]);//Top
         } else this.neighbours.push(null);
-        if (this.j !== 9) {
-            this.neighbours.push(cells[this.place + 10]);//Right
+        if (this.j !== rowsCols - 1) {
+            this.neighbours.push(cells[this.place + rowsCols]);//Right
         } else this.neighbours.push(null);
-        if (this.i !== 9) {
+        if (this.i !== rowsCols - 1) {
             this.neighbours.push(cells[this.place + 1]);//Bottom
         } else this.neighbours.push(null);
         if (this.j !== 0) {
-            this.neighbours.push(cells[this.place - 10]); //Left
+            this.neighbours.push(cells[this.place - rowsCols]); //Left
         } else this.neighbours.push(null);
     }
 
     this.isNeighbours = () => {
         this.unvisitedNeighbours = [];
-        if (this.neighbours[0] && !this.neighbours[0].visited) this.unvisitedNeighbours.push(this.neighbours[0]);
-        if (this.neighbours[1] && !this.neighbours[1].visited) this.unvisitedNeighbours.push(this.neighbours[1]);
-        if (this.neighbours[2] && !this.neighbours[2].visited) this.unvisitedNeighbours.push(this.neighbours[2]);
-        if (this.neighbours[3] && !this.neighbours[3].visited) this.unvisitedNeighbours.push(this.neighbours[3]);
+        for (i = 0; i < 4; i++) {
+            if (this.neighbours[i] && !this.neighbours[i].visited) this.unvisitedNeighbours.push(this.neighbours[i]);
+        }
 
         if (this.unvisitedNeighbours.length > 0) {
             return this.unvisitedNeighbours[Math.floor(Math.random() * this.unvisitedNeighbours.length)];
@@ -117,7 +120,7 @@ function Cell(i, j) {
 
 function mazeGenerator() {
     cells[0].player = true;
-    cells[99].finish = true;
+    cells[rowsCols * rowsCols - 1].finish = true; //set finish point
     while (!cells.every(element => element.visited)) {
         let before = current;
         current = current.isNeighbours();
@@ -128,10 +131,10 @@ function mazeGenerator() {
             } else if (before.place - 1 === current.place) {
                 current.walls[2] = false;
                 before.walls[0] = false;
-            } else if (before.place - 10 === current.place) {
+            } else if (before.place - rowsCols === current.place) {
                 current.walls[1] = false;
                 before.walls[3] = false;
-            } else if (before.place + 10 === current.place) {
+            } else if (before.place + rowsCols === current.place) {
                 current.walls[3] = false;
                 before.walls[1] = false;
             }
@@ -146,7 +149,7 @@ function mazeGenerator() {
 }
 
 function gameOver() {
-    console.log('gameOver ! \nGreat job !');
+    console.log('gameOver! \nGreat job !');
 }
 
 function line(x, y, xa, ya) {
@@ -156,5 +159,3 @@ function line(x, y, xa, ya) {
 
 //Objectives:
 // -- Make process of generating maze visible.
-// -- Refactor.
-// -- make size of maze adjustable and decrementable, so you can change size of it.
