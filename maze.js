@@ -3,7 +3,7 @@ const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
 const width = 400;
-const rowsCols = 16;
+const rowsCols = 8;
 const cw = Math.floor(width / rowsCols);
 const cells = [];
 const stack = [];
@@ -54,7 +54,7 @@ function Cell(i, j) {
 
     this.draw = () => {
         if (this.visited) {
-            ctx.fillStyle = 'rgb(90,0,130)';
+            ctx.fillStyle = '#241468';
             ctx.fillRect(x, y, cw, cw);
         }
         if (this.finish === true) {
@@ -150,5 +150,5 @@ function gameOver() {
 }
 
 //Objectives:
-// -- Make process of generating maze visible.
+// -- Make process of generating maze visible. --Pending
 // -- Implement path-finding mechanism
