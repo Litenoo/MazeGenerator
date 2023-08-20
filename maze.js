@@ -1,17 +1,18 @@
-document.body.innerHTML = '<canvas id = "canvas" width="400px" height="400px"></canvas>';
+document.body.innerHTML = '<canvas id = "canvas" width="800px" height="800px"></canvas>';
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
-const width = 400;
-const rowsCols = 8;
+const width = 800;
+const rowsCols = 16;
 const cw = Math.floor(width / rowsCols);
 const cells = [];
 const stack = [];
 let current;
+let before;
 let playerCell;
 
-createGrid();
-mazeGenerator();
+createGrid(); //refactorised
+const interv = setInterval(mazeGenerator,50) //Pending
 
 function createGrid() {
     for (let j = 0; j < rowsCols; j++) {
@@ -20,7 +21,7 @@ function createGrid() {
         }
     }
     // current = cells[Math.floor(Math.random() * (rowsCols * rowsCols))];  // -- alternative random maze begin generation
-    current = cells[rowsCols * rowsCols -1];
+    current = cells[rowsCols * rowsCols - 1];
     current.visited = true;
     cells.forEach(element => element.setup());
 }
@@ -37,19 +38,14 @@ function Cell(i, j) {
     let x = cw * j;
     let y = cw * i;
 
-    this.setup = () => { //might be refactorised (it's late i can not think)
-        if (this.i !== 0) {
-            this.neighbours.push(cells[this.place - 1]);//Top
-        } else this.neighbours.push(null);
-        if (this.j !== rowsCols - 1) {
-            this.neighbours.push(cells[this.place + rowsCols]);//Right
-        } else this.neighbours.push(null);
-        if (this.i !== rowsCols - 1) {
-            this.neighbours.push(cells[this.place + 1]);//Bottom
-        } else this.neighbours.push(null);
-        if (this.j !== 0) {
-            this.neighbours.push(cells[this.place - rowsCols]); //Left
-        } else this.neighbours.push(null);
+    this.setup = () => {
+        for (p = 0; p < 4; p++) {
+            if (this.i !== 0 && p == 0) this.neighbours.push(cells[this.place - 1]); //top
+            else if (this.j !== rowsCols - 1 && p == 1) this.neighbours.push(cells[this.place + rowsCols]);//Right
+            else if (this.i !== rowsCols - 1 && p == 2) this.neighbours.push(cells[this.place + 1]);//Bottom
+            else if (this.j !== 0 && p == 3) this.neighbours.push(cells[this.place - rowsCols]); //Left
+            else this.neighbours.push(null);
+        }
     }
 
     this.draw = () => {
@@ -65,18 +61,22 @@ function Cell(i, j) {
             ctx.fillStyle = 'rgb(10,90,180)';
             ctx.fillRect(x, y, cw, cw);
         }
+        if(this.creating){
+            ctx.fillStyle = '#fff'
+            ctx.fillRect(x,y,cw,cw);
+        }
 
-            ctx.beginPath();
-            ctx.strokeStyle = '#fff';
-            if (this.walls[0]) line(x, y, x + cw, y);
-            if (this.walls[1]) line(x + cw, y, x + cw, y + cw);
-            if (this.walls[2]) line(x + cw, y + cw, x, y + cw);
-            if (this.walls[3]) line(x, y + cw, x, y);
-            ctx.stroke();
-            ctx.closePath();
+        ctx.beginPath();
+        ctx.strokeStyle = '#fff';
+        if (this.walls[0]) line(x, y, x + cw, y);
+        if (this.walls[1]) line(x + cw, y, x + cw, y + cw);
+        if (this.walls[2]) line(x + cw, y + cw, x, y + cw);
+        if (this.walls[3]) line(x, y + cw, x, y);
+        ctx.stroke();
+        ctx.closePath();
     }
 
-    this.isNeighbours = () => {
+    this.isNeighbours = () => { //maybe can delete visitedNeighbours and use just neighbours instead
         this.unvisitedNeighbours = [];
         for (i = 0; i < 4; i++) {
             if (this.neighbours[i] && !this.neighbours[i].visited) this.unvisitedNeighbours.push(this.neighbours[i]);
@@ -87,35 +87,41 @@ function Cell(i, j) {
     }
 }
 
-
 function mazeGenerator() {
     cells[0].player = true;
-    cells[rowsCols * rowsCols - 1].finish = true; //set finish point
-        while (!cells.every(element => element.visited)) { // See if this is the best way to recognize is there any left unvisited cells (probably it's not)
-            let before = current;
-                current = current.isNeighbours();
-            if (current) {
-                if (before.place + 1 === current.place) {
-                    current.walls[0] = false;
-                    before.walls[2] = false;
-                } else if (before.place - 1 === current.place) {
-                    current.walls[2] = false;
-                    before.walls[0] = false;
-                } else if (before.place - rowsCols === current.place) {
-                    current.walls[1] = false;
-                    before.walls[3] = false;
-                } else if (before.place + rowsCols === current.place) {
-                    current.walls[3] = false;
-                    before.walls[1] = false;
-                }
-                current.visited = true;
-                stack.push(current);
-                current.draw();
-                before.draw();
-            } else {
-                current = stack.pop();
+    before = current;
+    current = current.isNeighbours();
+    cells[rowsCols * rowsCols - 1].finish = true;
+        if (current) {
+            if (before.place + 1 === current.place) {
+                current.walls[0] = false;
+                before.walls[2] = false;
+            } else if (before.place - 1 === current.place) {
+                current.walls[2] = false;
+                before.walls[0] = false;
+            } else if (before.place - rowsCols === current.place) {
+                current.walls[1] = false;
+                before.walls[3] = false;
+            } else if (before.place + rowsCols === current.place) {
+                current.walls[3] = false;
+                before.walls[1] = false;
             }
+            current.visited = true;
+            stack.push(current);
+            current.draw();
+        } else {
+            current = stack.pop();
         }
+        current.creating = true;
+        before.creating = false;
+        current.draw()
+        before.draw();
+        if(cells.every(element => element.visited)){
+            clearInterval(interv);
+            current.creating = false;
+            current.draw();
+        }
+
 }
 
 document.addEventListener('keydown', (btn) => {
@@ -124,10 +130,10 @@ document.addEventListener('keydown', (btn) => {
             if (element.player === true) playerCell = element;
         })
     }
-    if (btn.key == 'w') move(0, -1)
-    if (btn.key == 'd') move(1, rowsCols)
-    if (btn.key == 's') move(2, 1)
-    if (btn.key == 'a') move(3, -rowsCols)
+    if (btn.key == 'w') move(0, -1);
+    if (btn.key == 'd') move(1, rowsCols);
+    if (btn.key == 's') move(2, 1);
+    if (btn.key == 'a') move(3, -rowsCols);
 
     if (playerCell.place === rowsCols * rowsCols - 1) gameOver();
 })
@@ -150,5 +156,4 @@ function gameOver() {
 }
 
 //Objectives:
-// -- Make process of generating maze visible. --Pending
 // -- Implement path-finding mechanism
