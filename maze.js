@@ -1,18 +1,21 @@
-document.body.innerHTML = '<canvas id = "canvas" width="800px" height="800px"></canvas>';
+document.body.innerHTML = document.body.innerHTML + '<canvas id = "canvas" width="800px" height="800px"></canvas>';
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
 const width = 800;
-const rowsCols = 16;
+const rowsCols = 8;
 const cw = Math.floor(width / rowsCols);
 const cells = [];
-const stack = [];
+let stack = [];
 let current;
 let before;
 let playerCell;
 
-createGrid(); //refactorised
-const interv = setInterval(mazeGenerator,50) //Pending
+createGrid();
+const interv = setInterval(mazeGenerator, 0);
+// while(!cells.every(element => element.visited)){ //generate without animation (making error);
+//     mazeGenerator();
+// }
 
 function createGrid() {
     for (let j = 0; j < rowsCols; j++) {
@@ -20,8 +23,8 @@ function createGrid() {
             cells.push(new Cell(i, j));
         }
     }
-    // current = cells[Math.floor(Math.random() * (rowsCols * rowsCols))];  // -- alternative random maze begin generation
-    current = cells[rowsCols * rowsCols - 1];
+    current = cells[Math.floor(Math.random() * (rowsCols * rowsCols))];  // -- alternative random maze begin generation
+    //current = cells[rowsCols * rowsCols - 1];
     current.visited = true;
     cells.forEach(element => element.setup());
 }
@@ -35,6 +38,7 @@ function Cell(i, j) {
     this.unvisitedNeighbours = [];
     this.visited = false;
     this.player = false;
+    this.finish = false;
     let x = cw * j;
     let y = cw * i;
 
@@ -61,9 +65,9 @@ function Cell(i, j) {
             ctx.fillStyle = 'rgb(10,90,180)';
             ctx.fillRect(x, y, cw, cw);
         }
-        if(this.creating){
+        if (this.creating) {
             ctx.fillStyle = '#fff'
-            ctx.fillRect(x,y,cw,cw);
+            ctx.fillRect(x, y, cw, cw);
         }
 
         ctx.beginPath();
@@ -89,38 +93,39 @@ function Cell(i, j) {
 
 function mazeGenerator() {
     cells[0].player = true;
+    cells[rowsCols * rowsCols - 1].finish = true;
     before = current;
     current = current.isNeighbours();
-    cells[rowsCols * rowsCols - 1].finish = true;
-        if (current) {
-            if (before.place + 1 === current.place) {
-                current.walls[0] = false;
-                before.walls[2] = false;
-            } else if (before.place - 1 === current.place) {
-                current.walls[2] = false;
-                before.walls[0] = false;
-            } else if (before.place - rowsCols === current.place) {
-                current.walls[1] = false;
-                before.walls[3] = false;
-            } else if (before.place + rowsCols === current.place) {
-                current.walls[3] = false;
-                before.walls[1] = false;
-            }
-            current.visited = true;
-            stack.push(current);
-            current.draw();
-        } else {
-            current = stack.pop();
+    if (current) {
+        if (before.place + 1 === current.place) {
+            current.walls[0] = false;
+            before.walls[2] = false;
+        } else if (before.place - 1 === current.place) {
+            current.walls[2] = false;
+            before.walls[0] = false;
+        } else if (before.place - rowsCols === current.place) {
+            current.walls[1] = false;
+            before.walls[3] = false;
+        } else if (before.place + rowsCols === current.place) {
+            current.walls[3] = false;
+            before.walls[1] = false;
         }
-        current.creating = true;
-        before.creating = false;
-        current.draw()
-        before.draw();
-        if(cells.every(element => element.visited)){
-            clearInterval(interv);
-            current.creating = false;
-            current.draw();
-        }
+        current.visited = true;
+        stack.push(current);
+        current.draw();
+    } else {
+        current = stack.pop();
+    }
+    current.creating = true;
+    before.creating = false;
+    current.draw()
+    before.draw();
+    if (cells.every(element => element.visited)) {
+        clearInterval(interv);
+        current.creating = false;
+        current.draw();
+        stack = [];
+    }
 
 }
 
@@ -155,5 +160,22 @@ function gameOver() {
     console.log('gameOver! \nGreat job !');
 }
 
+function findPath() {
+    stack = [];
+    cells.forEach(element => {
+        element.visited = false;
+
+        if (element.player == true) {
+            current = element;
+        }
+        
+        console.log(current)
+        while (current.finish === false) {
+            current = current.isNeighbours();
+            console.log(current);
+        }
+    })
+}
+
 //Objectives:
-// -- Implement path-finding mechanism
+// -- Implement path-finding algorithm
