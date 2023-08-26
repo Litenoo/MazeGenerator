@@ -3,7 +3,7 @@ const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
 const width = 800;
-const rowsCols = 8;
+const rowsCols = 10;
 const cw = Math.floor(width / rowsCols);
 const cells = [];
 let stack = [];
@@ -43,6 +43,7 @@ function Cell(i, j) {
     let y = cw * i;
 
     this.setup = () => {
+        playerCell = cells[0];
         for (p = 0; p < 4; p++) {
             if (this.i !== 0 && p == 0) this.neighbours.push(cells[this.place - 1]); //top
             else if (this.j !== rowsCols - 1 && p == 1) this.neighbours.push(cells[this.place + rowsCols]);//Right
@@ -53,22 +54,12 @@ function Cell(i, j) {
     }
 
     this.draw = () => {
-        if (this.visited) {
-            ctx.fillStyle = '#241468';
-            ctx.fillRect(x, y, cw, cw);
-        }
-        if (this.finish === true) {
-            ctx.fillStyle = 'rgb(10,150,50)';
-            ctx.fillRect(x, y, cw, cw);
-        }
-        if (this.player) {
-            ctx.fillStyle = 'rgb(10,90,180)';
-            ctx.fillRect(x, y, cw, cw);
-        }
-        if (this.creating) {
-            ctx.fillStyle = '#fff'
-            ctx.fillRect(x, y, cw, cw);
-        }
+        if (this.visited) ctx.fillStyle = '#343448';
+        if (this.finish === true) ctx.fillStyle = 'rgb(10,150,50)';
+        if (this.player) ctx.fillStyle = 'rgb(10,90,180)';
+        if (this.creating) ctx.fillStyle = '#fff';
+        if (this.checked) ctx.fillStyle = '#f45';
+        ctx.fillRect(x, y, cw, cw);
 
         ctx.beginPath();
         ctx.strokeStyle = '#fff';
@@ -80,10 +71,10 @@ function Cell(i, j) {
         ctx.closePath();
     }
 
-    this.isNeighbours = () => { //maybe can delete visitedNeighbours and use just neighbours instead
+    this.isNeighbours = (attrib) => {
         this.unvisitedNeighbours = [];
         for (i = 0; i < 4; i++) {
-            if (this.neighbours[i] && !this.neighbours[i].visited) this.unvisitedNeighbours.push(this.neighbours[i]);
+            if (this.neighbours[i] && !this.neighbours[i][attrib]) this.unvisitedNeighbours.push(this.neighbours[i]);
         }
         if (this.unvisitedNeighbours.length > 0) {
             return this.unvisitedNeighbours[Math.floor(Math.random() * this.unvisitedNeighbours.length)];
@@ -95,7 +86,7 @@ function mazeGenerator() {
     cells[0].player = true;
     cells[rowsCols * rowsCols - 1].finish = true;
     before = current;
-    current = current.isNeighbours();
+    current = current.isNeighbours('visited');
     if (current) {
         if (before.place + 1 === current.place) {
             current.walls[0] = false;
@@ -110,6 +101,7 @@ function mazeGenerator() {
             current.walls[3] = false;
             before.walls[1] = false;
         }
+
         current.visited = true;
         stack.push(current);
         current.draw();
@@ -160,22 +152,21 @@ function gameOver() {
     console.log('gameOver! \nGreat job !');
 }
 
-function findPath() {
-    stack = [];
-    cells.forEach(element => {
-        element.visited = false;
-
-        if (element.player == true) {
-            current = element;
-        }
-        
-        console.log(current)
-        while (current.finish === false) {
-            current = current.isNeighbours();
-            console.log(current);
-        }
-    })
-}
 
 //Objectives:
-// -- Implement path-finding algorithm
+// -- Implement path-finding algorithm --Pending
+// -- refactor once more
+// -- change neighbour system to reduce code length !!!!
+
+
+/*
+probably WORKS :
+1. while current cell is not finish one
+    1.mark current cell as visited
+    2.if is there any way to go next neighbour cell
+        2.push current cell to stack
+        3.make current cell next one
+    3. else if there is no any way
+        make current cell the popped one of the stack
+
+*/
