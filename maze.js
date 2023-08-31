@@ -39,6 +39,7 @@ function Cell(i, j) {
     this.visited = false;
     this.player = false;
     this.finish = false;
+    this.checked = false;
     let x = cw * j;
     let y = cw * i;
 
@@ -79,6 +80,19 @@ function Cell(i, j) {
         if (this.unvisitedNeighbours.length > 0) {
             return this.unvisitedNeighbours[Math.floor(Math.random() * this.unvisitedNeighbours.length)];
         } else return null;
+    }
+
+
+    this.pickRandomNei = () => {
+        let arr = [];
+        for (i = 0; i < 4; i++) {
+            if(this.neighbours[i] != null){
+                if ((this.neighbours[i].walls[i + 2] == false || this.neighbours[i].walls[i - 2] == false) && (this.neighbours[i].checked == false)) arr.push(this.neighbours[i]);
+            }
+        }
+        console.log(arr)
+        if (arr.every(element => element.checked == true)) return null;
+        else return arr[Math.floor(Math.random() * arr.length)];
     }
 }
 
@@ -121,6 +135,12 @@ function mazeGenerator() {
 
 }
 
+
+
+
+
+
+
 document.addEventListener('keydown', (btn) => {
     if (playerCell === undefined) {
         cells.forEach(element => {
@@ -152,6 +172,24 @@ function gameOver() {
     console.log('gameOver! \nGreat job !');
 }
 
+let currentCell = playerCell;
+let nextCell;
+function resolveMaze() { // nearly works
+    if (currentCell.finish === false) {
+        currentCell.checked = true;
+        nextCell = currentCell.pickRandomNei();
+        if (nextCell != null) {
+            stack.push(currentCell);
+            currentCell.draw()
+            currentCell = nextCell;
+        } else {
+            currentCell = stack.pop();
+        }
+    }
+    console.log(stack);
+}
+
+
 
 //Objectives:
 // -- Implement path-finding algorithm --Pending
@@ -161,11 +199,11 @@ function gameOver() {
 
 /*
 probably WORKS :
-1. while current cell is not finish one
-    1.mark current cell as visited
-    2.if is there any way to go next neighbour cell
-        2.push current cell to stack
-        3.make current cell next one
+1. while current cell is not finish one --
+    1.mark current cell as visited -- 
+    2.if there is any way to go next neighbour cell --
+        2.push current cell to stack --
+        3.make next cell the current one --
     3. else if there is no any way
         make current cell the popped one of the stack
 
