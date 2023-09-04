@@ -3,16 +3,19 @@ const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
 const width = 800;
-const rowsCols = 10;
+const rowsCols = 24;
 const cw = Math.floor(width / rowsCols);
 const cells = [];
+const resBtn = document.querySelector('#resolve');
 let stack = [];
 let current;
 let before;
 let playerCell;
 
+resBtn.addEventListener('click', btnClicked)
+
 createGrid();
-const interv = setInterval(mazeGenerator, 0);
+const interv = setInterval(mazeGenerator, 30);
 // while(!cells.every(element => element.visited)){ //generate without animation (making error);
 //     mazeGenerator();
 // }
@@ -57,9 +60,10 @@ function Cell(i, j) {
     this.draw = () => {
         if (this.visited) ctx.fillStyle = '#343448';
         if (this.finish === true) ctx.fillStyle = 'rgb(10,150,50)';
-        if (this.player) ctx.fillStyle = 'rgb(10,90,180)';
         if (this.creating) ctx.fillStyle = '#fff';
         if (this.checked) ctx.fillStyle = '#f45';
+        if (this.road) ctx.fillStyle = 'rgb(180,30,180)';
+        if (this.player) ctx.fillStyle = 'rgb(10,90,180)';
         ctx.fillRect(x, y, cw, cw);
 
         ctx.beginPath();
@@ -72,10 +76,10 @@ function Cell(i, j) {
         ctx.closePath();
     }
 
-    this.isNeighbours = (attrib) => {
+    this.isNeighbours = () => {
         this.unvisitedNeighbours = [];
         for (i = 0; i < 4; i++) {
-            if (this.neighbours[i] && !this.neighbours[i][attrib]) this.unvisitedNeighbours.push(this.neighbours[i]);
+            if (this.neighbours[i] && !this.neighbours[i].visited) this.unvisitedNeighbours.push(this.neighbours[i]);
         }
         if (this.unvisitedNeighbours.length > 0) {
             return this.unvisitedNeighbours[Math.floor(Math.random() * this.unvisitedNeighbours.length)];
@@ -91,6 +95,7 @@ function Cell(i, j) {
             }
         }
         console.log(arr)
+        this.draw();
         if (arr.every(element => element.checked == true)) return null;
         else return arr[Math.floor(Math.random() * arr.length)];
     }
@@ -100,7 +105,7 @@ function mazeGenerator() {
     cells[0].player = true;
     cells[rowsCols * rowsCols - 1].finish = true;
     before = current;
-    current = current.isNeighbours('visited');
+    current = current.isNeighbours();
     if (current) {
         if (before.place + 1 === current.place) {
             current.walls[0] = false;
@@ -135,12 +140,6 @@ function mazeGenerator() {
 
 }
 
-
-
-
-
-
-
 document.addEventListener('keydown', (btn) => {
     if (playerCell === undefined) {
         cells.forEach(element => {
@@ -171,31 +170,33 @@ function line(x, y, xa, ya) {
 function gameOver() {
     console.log('gameOver! \nGreat job !');
 }
+function btnClicked() {
+    const resolveTime = setInterval(resolveMaze,50)
+}
 
 let currentCell = playerCell;
 let nextCell;
-function resolveMaze() { // nearly works
+function resolveMaze() {
     if (currentCell.finish === false) {
         currentCell.checked = true;
         nextCell = currentCell.pickRandomNei();
         if (nextCell != null) {
             stack.push(currentCell);
-            currentCell.draw()
             currentCell = nextCell;
         } else {
             currentCell = stack.pop();
         }
+    }else{
+        stack.forEach(element => element.road = true);
+        cells.forEach(element => element.checked = false);
+        cells.forEach(element => element.draw())
+        clearInterval(resolveTime);
     }
     console.log(stack);
 }
 
-
-
 //Objectives:
-// -- Implement path-finding algorithm --Pending
 // -- refactor once more
-// -- change neighbour system to reduce code length !!!!
-
 
 /*
 probably WORKS :
@@ -206,5 +207,4 @@ probably WORKS :
         3.make next cell the current one --
     3. else if there is no any way
         make current cell the popped one of the stack
-
 */

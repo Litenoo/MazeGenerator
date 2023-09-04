@@ -1,3 +1,12 @@
 body{
     background-color: #121212;
 }
+#resolve{
+    background-color: #282;
+    width: 160px;
+    height: 30px;
+    font-size: 28px;
+    border: 2px solid white;
+    border-radius: 5px;
+    padding: 4px;
+}
