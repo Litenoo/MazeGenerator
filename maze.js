@@ -3,7 +3,7 @@ const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
 const width = 800;
-const rowsCols = 24;
+const rowsCols = 10;
 const cw = Math.floor(width / rowsCols);
 const cells = [];
 const resBtn = document.querySelector('#resolve');
@@ -11,11 +11,12 @@ let stack = [];
 let current;
 let before;
 let playerCell;
+let resolveTime;
 
-resBtn.addEventListener('click', btnClicked)
+resBtn.addEventListener('click', btnClicked);
 
 createGrid();
-const interv = setInterval(mazeGenerator, 30);
+const interv = setInterval(mazeGenerator, 0);
 // while(!cells.every(element => element.visited)){ //generate without animation (making error);
 //     mazeGenerator();
 // }
@@ -86,7 +87,7 @@ function Cell(i, j) {
         } else return null;
     }
 
-
+    // Make one function by both of theese and make it works 
     this.pickRandomNei = () => {
         let arr = [];
         for (i = 0; i < 4; i++) {
@@ -171,7 +172,7 @@ function gameOver() {
     console.log('gameOver! \nGreat job !');
 }
 function btnClicked() {
-    const resolveTime = setInterval(resolveMaze,50)
+    resolveTime = setInterval(resolveMaze,20)
 }
 
 let currentCell = playerCell;
@@ -190,7 +191,8 @@ function resolveMaze() {
         stack.forEach(element => element.road = true);
         cells.forEach(element => element.checked = false);
         cells.forEach(element => element.draw())
-        clearInterval(resolveTime);
+        clearInterval(resolveTime)
+        return 0;
     }
     console.log(stack);
 }
