@@ -3,7 +3,7 @@ const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
 const width = 800;
-const rowsCols = 10;
+const rowsCols = 12;
 const cw = Math.floor(width / rowsCols);
 const cells = [];
 const resBtn = document.querySelector('#resolve');
@@ -77,28 +77,22 @@ function Cell(i, j) {
         ctx.closePath();
     }
 
-    this.isNeighbours = () => {
-        this.unvisitedNeighbours = [];
+    this.pickRandom = (attr) => {
+        this.ways = [];
         for (i = 0; i < 4; i++) {
-            if (this.neighbours[i] && !this.neighbours[i].visited) this.unvisitedNeighbours.push(this.neighbours[i]);
-        }
-        if (this.unvisitedNeighbours.length > 0) {
-            return this.unvisitedNeighbours[Math.floor(Math.random() * this.unvisitedNeighbours.length)];
-        } else return null;
-    }
-
-    // Make one function by both of theese and make it works 
-    this.pickRandomNei = () => {
-        let arr = [];
-        for (i = 0; i < 4; i++) {
-            if(this.neighbours[i] != null){
-                if ((this.neighbours[i].walls[i + 2] == false || this.neighbours[i].walls[i - 2] == false) && (this.neighbours[i].checked == false)) arr.push(this.neighbours[i]);
+            if (attr === true && this.neighbours[i] && !this.neighbours[i].visited) {
+                this.ways.push(this.neighbours[i]);
+            }
+            //Try to make this eeaseier (on bottom :))
+            if (attr === false && this.neighbours[i] != null && (this.neighbours[i].walls[i + 2] == false || this.neighbours[i].walls[i - 2] == false) && (this.neighbours[i].checked == false)) {
+                this.ways.push(this.neighbours[i]);
             }
         }
-        console.log(arr)
-        this.draw();
-        if (arr.every(element => element.checked == true)) return null;
-        else return arr[Math.floor(Math.random() * arr.length)];
+        if (this.ways.length > 0) {
+            return this.ways[Math.floor(Math.random() * this.ways.length)];
+        } else {
+            return null;
+        }
     }
 }
 
@@ -106,7 +100,7 @@ function mazeGenerator() {
     cells[0].player = true;
     cells[rowsCols * rowsCols - 1].finish = true;
     before = current;
-    current = current.isNeighbours();
+    current = current.pickRandom(true);
     if (current) {
         if (before.place + 1 === current.place) {
             current.walls[0] = false;
@@ -130,7 +124,7 @@ function mazeGenerator() {
     }
     current.creating = true;
     before.creating = false;
-    current.draw()
+    current.draw();
     before.draw();
     if (cells.every(element => element.visited)) {
         clearInterval(interv);
@@ -138,7 +132,6 @@ function mazeGenerator() {
         current.draw();
         stack = [];
     }
-
 }
 
 document.addEventListener('keydown', (btn) => {
@@ -172,7 +165,7 @@ function gameOver() {
     console.log('gameOver! \nGreat job !');
 }
 function btnClicked() {
-    resolveTime = setInterval(resolveMaze,20)
+    resolveTime = setInterval(resolveMaze, 20)
 }
 
 let currentCell = playerCell;
@@ -180,33 +173,19 @@ let nextCell;
 function resolveMaze() {
     if (currentCell.finish === false) {
         currentCell.checked = true;
-        nextCell = currentCell.pickRandomNei();
+        nextCell = currentCell.pickRandom(false);
         if (nextCell != null) {
+            currentCell.draw();
             stack.push(currentCell);
             currentCell = nextCell;
         } else {
             currentCell = stack.pop();
         }
-    }else{
+    } else {
         stack.forEach(element => element.road = true);
         cells.forEach(element => element.checked = false);
-        cells.forEach(element => element.draw())
-        clearInterval(resolveTime)
+        cells.forEach(element => element.draw());
+        clearInterval(resolveTime);
         return 0;
     }
-    console.log(stack);
 }
-
-//Objectives:
-// -- refactor once more
-
-/*
-probably WORKS :
-1. while current cell is not finish one --
-    1.mark current cell as visited -- 
-    2.if there is any way to go next neighbour cell --
-        2.push current cell to stack --
-        3.make next cell the current one --
-    3. else if there is no any way
-        make current cell the popped one of the stack
-*/
